@@ -3,10 +3,11 @@
 import numpy as np
 import cv2
 import sys
-import threading, thread
-from Queue import Queue
+import threading, _thread
+from queue import Queue
 import time
 import json
+import MTCNN_Crop_Face
 
 LIVE_URL = "rtsp://admin:admin123@172.16.1.29/cam/realmonitor?channel=1&subtype=0"
 RECORD_URL = "rtsp://admin:admin123@172.16.1.16:554/cam/playback?channel=1&subtype=0&starttime=2019_05_27_17_06_00&endtime=2019_05_27_17_08_00"
@@ -17,6 +18,8 @@ PER_FILE_FRAME = SEGMENT_TIME * FPS
 
 DATA_FILE_PATH = "data/"
 SNAP_FILE_PATH = "snapshoot/"
+
+MTC = MTCNN_Crop_Face.MTCNN_Crop_Face()
 
 class DealRecord():
 
@@ -48,7 +51,7 @@ class DealRecord():
 			print (self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
 			print (self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
 		
-		thread.start_new_thread(self.getRecord, ())
+		_thread.start_new_thread(self.getRecord, ())
 
 		self.dealRecord()
 
@@ -62,6 +65,7 @@ class DealRecord():
 				self.frame_queue.put("fileover")
 				break
 			else:
+				# frame = cv2.resize(frame,(864,576))
 				self.frame_queue.put(frame)
 				# print("---- put frame.")
 
@@ -86,24 +90,24 @@ class DealRecord():
 			if (frame_num % (FPS*10) == 0):
 				print("get frame %d. left %d"% (frame_num, self.frame_queue.qsize()))
 			
-			# opencv读取的图片格式为bgr24 转为灰度图
-			frame_temp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-			# 直方图均匀化(改善图像的对比度和亮度)
-			frame_temp = cv2.equalizeHist(frame_temp)	
-			# 获取该图片中的各个人脸的坐标,画框
-			faces = self.face_cascade.detectMultiScale(frame_temp, 1.3, 5)
+			# 人脸检测
+			# faces = self.MTC.cropface(frame)
+			# 隔帧检测
+			if frame_num % 2 == 1:
+				faces = MTC.cropface(frame)
+				last_face = faces
+			else:
+				faces = last_face
 
-			for (x, y, w, h) in faces:
-				frame = cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+			for bbox in faces:
+				cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
 
-			if '[' in str(faces):
-				content = str(faces.tolist()) + "\n"
-				# 最少间隔1秒保存一次
-				if (frame_num - frame_to_save_num > FPS) or (frame_to_save_num == 0):
+			content = str(faces) + "\n"
+			if (len(faces) != 0):
+				# 快照间隔至少10秒
+				if (frame_num - frame_to_save_num > FPS*10) or (frame_to_save_num == 0):
 					frame_to_save = frame
 					frame_to_save_num = frame_num
-			else:
-				content = "[]" + '\n'
 
 			data.append(content)
 			
@@ -160,13 +164,12 @@ if __name__ == "__main__":
 
 	if (len(sys.argv) == 2):
 		while 1:
-			timestamp = time.localtime(time.time() - 60)
-			timestamp_str = time.strftime("%Y_%m_%d_%H_%M", timestamp)
-			start_time_str = timestamp_str + '_00'
-			print(start_time_str)
-			test = DealRecord(start_time_str, '-1')
+			timestamp = time.time()
+			start_time_str = time.strftime("%Y_%m_%d_%H_%M", time.localtime(timestamp - 60)) + "_00"
+			end_time_str = time.strftime("%Y_%m_%d_%H_%M", time.localtime(timestamp)) + "_00"
+			print("start=%s   end=%s"%(start_time_str, end_time_str))
+			test = DealRecord(start_time_str, end_time_str)
 			test.run()
-			time.sleep(0.1)
 
 	if (len(sys.argv) == 3):
 		start_time = sys.argv[1]

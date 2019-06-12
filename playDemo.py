@@ -3,8 +3,8 @@
 import numpy as np
 import cv2
 import sys
-import threading, thread
-from Queue import Queue
+import threading, _thread
+from queue import Queue
 import time
 import requests
 import json
@@ -18,8 +18,9 @@ PER_FILE_FRAME = SEGMENT_TIME * FPS
 
 FILE_PATH = "data/"
 
-# DATA_SERVER = "http://172.16.3.44:8000/"
-DATA_SERVER = "http://172.16.1.91:8000/"
+# DATA_SERVER = "http://127.0.0.1:8000/"
+# DATA_SERVER = "http://172.16.1.91:8000/"
+DATA_SERVER = "http://172.16.1.19:8000/"
 
 class playRecord():
 
@@ -46,8 +47,8 @@ class playRecord():
 			print (self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
 			print (self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
 		
-		self.t1 = thread.start_new_thread(self.getRecord, ())
-		self.t2 = thread.start_new_thread(self.getAIData, ())
+		self.t1 = _thread.start_new_thread(self.getRecord, ())
+		self.t2 = _thread.start_new_thread(self.getAIData, ())
 
 		self.play()
 
@@ -79,21 +80,20 @@ class playRecord():
 			if response.status_code != 200:
 				break
 			
-			lines = response.text.split('\n')	
-			for line in lines[:-1]:
+			lines = response.text.split('\n')
+
+			# 第一个文件起始位置精确到秒数
+			drop_num = 0
+			if timetemp == self.sart_timeStamp:
+				drop_num = self.start_timeArray.tm_sec * FPS
+				if drop_num >= len(lines) -2:
+					drop_num = len(lines) -2
+				print("droped=%d"%(drop_num))
+
+			for line in lines[drop_num:-1]:
 				d = json.loads(line)
 				self.ai_data_queue.put(d)
 			
-			# 第一个文件起始位置精确到秒数
-			if timetemp == self.sart_timeStamp:
-				drop_num = self.start_timeArray.tm_sec * FPS
-				if drop_num >= self.ai_data_queue.qsize():
-					drop_num = self.ai_data_queue.qsize()
-				for t in range(drop_num):
-					self.ai_data_queue.get()
-
-				print("droped ", drop_num)
-
 			timetemp += 60
 
 		print("---- get ai data finish.")
@@ -116,11 +116,8 @@ class playRecord():
 			
 			# 只显示了一个人脸
 			if len(ai_data) != 0:
-				x = ai_data[0][0]
-				y = ai_data[0][1]
-				w = ai_data[0][2]
-				h = ai_data[0][3]
-				frame = cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+				for face in ai_data:
+					cv2.rectangle(frame, (int(face[0]), int(face[1])), (int(face[2]), int(face[3])), (0, 0, 255), 2)
 
 			cv2.imshow('image',frame)
 

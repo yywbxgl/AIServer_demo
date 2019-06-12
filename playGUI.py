@@ -5,7 +5,7 @@ import os
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 import requests
-import Tkinter as tk
+import tkinter as tk
 import playDemo
 import time
 
@@ -17,9 +17,10 @@ FIGURE_TOTAL = FIGURE_X * FIGURE_Y
 IMG_SIZE_W = int(1280*0.35)
 IMG_SIZE_H = int(720*0.35)
 # URL = "http://127.0.0.1:8001/"
-URL = "http://172.16.3.44:8001/"
-URL = "http://172.16.1.91:8001/"
+# URL = "http://172.16.1.91:8001/"
+URL = "http://172.16.1.19:8001/"
 
+TEMP_PATH = "temp/"
 
 class palyGUI():
 
@@ -35,7 +36,7 @@ class palyGUI():
             return
         
         result = []
-        li = response.text.split("</a>\n")
+        li = response.text.split("</a>")
         num = len(li[1:-1])
         for line in li[num - FIGURE_TOTAL + 1:-1]:
             temp = line.split(">")
@@ -44,7 +45,7 @@ class palyGUI():
         
         for i in range(FIGURE_TOTAL):
             res = requests.get(URL + result[i])
-            open(result[i], 'wb').write(res.content)
+            open(TEMP_PATH + result[i], 'wb').write(res.content)
 
         return result
 
@@ -62,7 +63,7 @@ class palyGUI():
         self.pictures = self.get_snapshoot()
         print(self.pictures)
         for i in range(FIGURE_TOTAL):
-            img = Image.open(self.pictures[i])
+            img = Image.open(TEMP_PATH + self.pictures[i])
             plt.subplot(FIGURE_X,FIGURE_Y,i+1)
             plt.title(self.pictures[i])
             plt.imshow(img)
@@ -71,14 +72,19 @@ class palyGUI():
         plt.show()
 
     def button_click(self, txt):
-        print txt
         context = txt.split(".jpg")
         start_timeArray = time.strptime(context[0], "%Y%m%d_%H%M%S")
         start_timeStamp = time.mktime(start_timeArray)
-        start_time = start_timeStamp - 10
-        end_time = start_timeStamp + 180
+        start_time = int((start_timeStamp -1) / 10) * 10
+        end_time = start_timeStamp + 100
         start_time_str = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime(start_time))
         end_time_str = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime(end_time))
+
+        # start_time = start_timeStamp -10
+        # end_time = start_timeStamp + 100
+        # start_time_str = time.strftime("%Y_%m_%d_%H_%M_00", time.localtime(start_time))
+        # end_time_str = time.strftime("%Y_%m_%d_%H_%M_00", time.localtime(end_time))
+
         # print(start_time_str)
         # print(end_time_str)
         player = playDemo.playRecord(start_time_str, end_time_str)
@@ -95,21 +101,21 @@ class palyGUI():
 
         # 获取屏幕的宽度和高度，并且在高度上考虑到底部的任务栏，为了是弹出的窗口在屏幕中间
         screenwidth = top.winfo_screenwidth()
-        screenheight = top.winfo_screenheight() - 100
+        screenheight = top.winfo_screenheight()
         # top.resizable(False, False) 
         
         frame_root = tk.LabelFrame(top)
         btn_list =[]
         for i in range(FIGURE_TOTAL):
-            img = Image.open(self.pictures[i])
+            img = Image.open(TEMP_PATH + self.pictures[i])
             img = img.resize( (IMG_SIZE_W,IMG_SIZE_H), Image.ANTIALIAS)
             bm = ImageTk.PhotoImage(img)
             button = tk.Button(frame_root, image=bm, text=self.pictures[i])
             button.image = bm
             button.config(command = lambda t=self.pictures[i]:  self.button_click(t))
             btn_list.append(button)
-            x = i / FIGURE_X
-            y = i % FIGURE_Y
+            x = int(i / FIGURE_X)
+            y = int(i % FIGURE_Y)
             button.grid(row=x, column=y)
         
         frame_root.grid(row=0, column=0)
