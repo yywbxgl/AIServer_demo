@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
 	if (len(sys.argv) == 2):
 		while 1:
-			timestamp = time.time()
+			timestamp = time.time() + 8*60*60
 			start_time_str = time.strftime("%Y_%m_%d_%H_%M", time.localtime(timestamp - 60)) + "_00"
 			end_time_str = time.strftime("%Y_%m_%d_%H_%M", time.localtime(timestamp)) + "_00"
 			print("start=%s   end=%s"%(start_time_str, end_time_str))

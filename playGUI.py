@@ -14,11 +14,13 @@ FIGURE_X = 4
 FIGURE_Y = 4
 FIGURE_TOTAL = FIGURE_X * FIGURE_Y
 
-IMG_SIZE_W = int(1280*0.35)
-IMG_SIZE_H = int(720*0.35)
-# URL = "http://127.0.0.1:8001/"
+# IMG_SIZE_W = int(1280*0.35)
+# IMG_SIZE_H = int(720*0.35)
+IMG_SIZE_W = int(1280*0.74)
+IMG_SIZE_H = int(720*0.74)
+URL = "http://127.0.0.1:8001/"
 # URL = "http://172.16.1.91:8001/"
-URL = "http://172.16.1.19:8001/"
+# URL = "http://172.16.1.19:8001/"
 
 TEMP_PATH = "temp/"
 
@@ -75,15 +77,16 @@ class palyGUI():
         context = txt.split(".jpg")
         start_timeArray = time.strptime(context[0], "%Y%m%d_%H%M%S")
         start_timeStamp = time.mktime(start_timeArray)
+        
         start_time = int((start_timeStamp -1) / 10) * 10
         end_time = start_timeStamp + 100
         start_time_str = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime(start_time))
         end_time_str = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime(end_time))
 
-        # start_time = start_timeStamp -10
-        # end_time = start_timeStamp + 100
+        # start_time = start_timeStamp
+        # end_time = start_timeStamp + 10
         # start_time_str = time.strftime("%Y_%m_%d_%H_%M_00", time.localtime(start_time))
-        # end_time_str = time.strftime("%Y_%m_%d_%H_%M_00", time.localtime(end_time))
+        # end_time_str = time.strftime("%Y_%m_%d_%H_%M_59", time.localtime(end_time))
 
         # print(start_time_str)
         # print(end_time_str)
