@@ -1,34 +1,32 @@
 #  AIServer_for_video
+演示了一个AI服务器的应用场景，AI服务器是基于AI芯片硬件加速的，具有如下功能
 
-1. AI Server 通过rtsp协议拉取前录像，进行AI处理（如MTCNN人脸检测），并保存AI处理结果。
-2. 保存特征数据的同时可保存快照，短视频等用于快速浏览与检索。
+1. AI Server 通过rtsp协议获取录像机的视频流，进行AI处理（如人脸检测等），并保存AI处理结果。
+2. AI处理结果只保存特征数据或者结果标签，同时还可保存快照，用于在检索时快速浏览。
+3. 客户端可以检索AI Server的处理结果，并在回放录像时将AI处理结果重新合入视频。
 
 
-## docker server 运行
+## 运行Server
 ```
-sudo docker run --runtime=nvidia -it -v /home/test/sunqiliang/video_stream_convert:/home stream-test3 bash
-
-cd /home
-python AIServerDemo.py live
-
 cd data
 python -m http.server  8000
 
 cd ../snapshot
 python -m http.server 8001
 
-````
+cd ..
+# -v参数挂载当前git目录到docker的home目录
+sudo docker run --runtime=nvidia -it -v /home/test/sunqiliang/video_stream_convert:/home stream-test3 bash
 
-
+# 在docker里运行以下指令
+cd /home
+python AIServerDemo.py live
+```
 
 ## 客户端运行
-
 ```
 python3 playGUI.py
-
 ```
-
-
 
 ## 其他命令
 
