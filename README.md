@@ -9,10 +9,10 @@
 ## 运行Server
 ```
 cd data
-python -m http.server  8000
+python3 -m http.server  8000
 
 cd ../snapshot
-python -m http.server 8001
+python3 -m http.server 8001
 
 cd ..
 # -v参数挂载当前git目录到docker的home目录
@@ -20,7 +20,7 @@ sudo docker run --runtime=nvidia -it -v /home/test/sunqiliang/video_stream_conve
 
 # 在docker里运行以下指令
 cd /home
-python AIServerDemo.py live
+python3 AIServerDemo.py live
 ```
 
 ## 客户端运行
